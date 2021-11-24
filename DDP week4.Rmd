@@ -1,0 +1,80 @@
+---
+title: "DDP Week4 Assignment"
+author: "Damian Strzelec"
+date: "11/24/2021"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Analysis Description
+
+- Goal:
+Create Shiny Application project including R code algorithm based on selected new data set
+
+- Introduction: 
+Airquality data set is summarizing daily readings of the following air quality values for May 1, 1973 to September 30, 1973.
+
+- Assumptions:
+Analysis includes proposal of two linear regression models for ozone prediction based on wind values. 
+
+- Results:
+Model 1 is more accurate. Ozone predictions changes are significantly related for wind between 1mph and 10mph.
+Model 2 is applicable only for wind values from 1 to 17 mph.
+
+
+
+## Airquality Dataset Summary
+```{r airquality, echo = TRUE}
+summary(airquality)
+```
+
+## Define code ui.R
+
+```r
+shinyUI(fluidPage(
+    titlePanel("Analysis of Ozone based on Wind"),
+    sidebarLayout(
+        sidebarPanel(
+            sliderInput("sliderWind", "What is the Wind [mph] value?",
+            1, 21, value = 10),
+            checkboxInput("showModel1", "Show/Hide Model 1", value = TRUE),
+            checkboxInput("showModel2", "Show/Hide Model 2", value = TRUE)
+        ),
+        mainPanel(
+            plotOutput("plot1"),
+            h3("Ozone Prediction from Model 1:"),
+            textOutput("pred1"),
+            h3("Ozone Prediction from Model 2:"),
+            textOutput("pred2"),
+        ))))
+```
+
+## Define code server.R
+
+```r
+shinyServer(function(input, output) {
+airquality$Wind1 <- ifelse(airquality$Wind - 10> 0, airquality$Wind - 10,0)
+    model1 <- lm(Ozone ~ Wind, data = airquality)
+    model2 <- lm(Ozone ~ Wind1 + Wind, data = airquality)
+    
+    model1pred    <- reactive({
+        WindInput <- input$sliderWind
+        predict(model1, newdata = data.frame(Wind = WindInput)) })
+        
+    model2pred    <- reactive({
+        WindInput <- input$sliderWind
+        predict(model2, newdata = data.frame(Wind = WindInput,
+                Wind1 = ifelse(WindInput - 10 > 0,WindInput - 10, 0))) })
+    ....
+    
+     output$pred1 <- renderText({model1pred() })
+     output$pred2 <- renderText({model2pred() })
+}) 
+```
+
+
+
+
